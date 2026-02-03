@@ -62,3 +62,21 @@ class TenantPolicyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'tenant', 'version', 'last_deployed_at', 'last_deploy_status')
     readonly_fields = ('last_deployed_at', 'last_deploy_status')
     search_fields = ('name', 'tenant__name')
+    actions = ['deploy_to_opa']
+
+    def deploy_to_opa(self, request, queryset):
+        from iam.opa_client import OPAClient
+        from django.utils import timezone
+        for policy in queryset:
+            path = f"tenant_{policy.tenant.id}_{policy.name}"
+            try:
+                OPAClient.push_policy(path, policy.rego)
+                policy.last_deployed_at = timezone.now()
+                policy.last_deploy_status = 'ok'
+                policy.save()
+                self.message_user(request, f"Deployed {policy.name} -> {path}")
+            except Exception as e:
+                policy.last_deploy_status = f"error: {str(e)[:200]}"
+                policy.save()
+                self.message_user(request, f"Failed to deploy {policy.name}: {e}", level='error')
+    deploy_to_opa.short_description = 'Deploy selected policies to OPA'
