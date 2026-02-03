@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'moodle_integration',
     'exam_integrity',
     'auto_grading',
+    'grade_integrity',
 
     # IAM
     'iam',
