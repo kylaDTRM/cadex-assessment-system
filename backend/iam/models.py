@@ -94,6 +94,24 @@ class DelegatedGrant(models.Model):
     active = models.BooleanField(default=True)
 
 
+class TenantPolicy(models.Model):
+    """A per-tenant Rego policy source managed in the application and deployable to OPA."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    rego = models.TextField(help_text='Rego source for OPA')
+    version = models.CharField(max_length=64, null=True, blank=True)
+    last_deployed_at = models.DateTimeField(null=True, blank=True)
+    last_deploy_status = models.CharField(max_length=64, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = (('tenant', 'name'),)
+
+    def __str__(self):
+        return f"{self.name} ({self.tenant})"
+
+
 class EmergencyAccess(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
