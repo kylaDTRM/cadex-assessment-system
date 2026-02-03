@@ -40,12 +40,23 @@ jobs:
           for i in $(seq 1 30); do curl -sSf $OPA_URL/health && break || sleep 1; done
       - name: Lint (ruff)
         run: ruff check .
-      - name: Run tests
+      - name: Run tests (per-app to avoid discovery conflicts)
         env:
           OPA_URL: ${{ env.OPA_URL }}
         run: |
           cd backend
-          python manage.py test --verbosity=2
+          python manage.py test assessment_core iam auto_grading exam_integrity moodle_integration --verbosity=2
+      - name: Coverage
+        run: |
+          cd backend
+          pip install coverage
+          coverage run --source=backend -m django test assessment_core iam auto_grading exam_integrity moodle_integration
+          coverage xml -o coverage.xml || true
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
       - name: Flake8
         run: flake8 --exclude=.venv,.git,__pycache__ --statistics
 
