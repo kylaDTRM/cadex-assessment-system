@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+.eggs/
+
+# Pytest, coverage
+.coverage
+coverage.xml
+htmlcov/
+backend/.coverage
+
+# VS Code
+.vscode/
+
+# Django
+db.sqlite3
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Misc
+*.swp

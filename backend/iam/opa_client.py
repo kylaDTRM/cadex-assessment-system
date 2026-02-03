@@ -1,5 +1,5 @@
-import requests
 from django.conf import settings
+# Import requests lazily inside methods to avoid hard dependency at module import time
 
 
 class OPAClient:
@@ -22,6 +22,7 @@ class OPAClient:
         p = policy_path.strip('/')
         url = f"{base}/v1/data/{p}"
         try:
+            import requests
             resp = requests.post(url, json={'input': input_obj}, timeout=5.0)
             resp.raise_for_status()
             data = resp.json()
@@ -48,6 +49,7 @@ class OPAClient:
         if not base:
             raise RuntimeError('OPA_URL not configured')
         url = f"{base}/v1/policies/{policy_path}"
+        import requests
         resp = requests.put(url, data=rego_source.encode('utf-8'), headers={'Content-Type': 'text/plain'})
         resp.raise_for_status()
         return True

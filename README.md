@@ -1,3 +1,5 @@
+[![CI](https://github.com/kylaDTRM/cadex-assessment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/kylaDTRM/cadex-assessment-system/actions/workflows/ci.yml)
+
 # cadex-assessment-system
 Online Assessment &amp; Examination Platform for Universities
 
