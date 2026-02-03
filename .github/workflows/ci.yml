@@ -57,6 +57,12 @@ jobs:
         with:
           name: coverage-report
           path: backend/coverage.xml
+      - name: Check coverage
+        run: |
+          cd backend
+          pip install coverage
+          coverage run --source=backend -m django test assessment_core iam auto_grading exam_integrity moodle_integration
+          coverage report --fail-under=60
       - name: Flake8
         run: flake8 --exclude=.venv,.git,__pycache__ --statistics
 
