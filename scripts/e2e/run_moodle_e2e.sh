@@ -79,4 +79,34 @@ else
   echo "Plugin test_update_grade failed: $resp2" && exit 1
 fi
 
+# Extract operation_id (if present)
+if command -v jq >/dev/null 2>&1; then
+  OP_ID=$(echo "$resp2" | jq -r '.result.operation_id // empty')
+else
+  OP_ID=$(echo "$resp2" | sed -n 's/.*"operation_id":\s*\([0-9]*\).*/\1/p' || true)
+fi
+if [ -z "$OP_ID" ]; then
+  echo "No operation_id returned; cannot verify operation record" && exit 1
+fi
+
+echo "First grade update produced operation_id=$OP_ID"
+
+# Re-send same client_request_id to assert idempotency
+echo "Re-sending update with same client_request_id to check idempotency"
+resp3=$(curl -sSfL -b "$COOKIEJAR" -X POST -H "Content-Type: application/json" -d '{"action":"test_update_grade","itemid":1,"userid":1,"grade":0.5,"client_request_id":"'"$CLIENT_REQ_ID"'"}' "$MOODLE_URL/local/caex_integration/web/test_endpoint.php" || true)
+if echo "$resp3" | grep -q '"already_applied"'; then
+  echo "Idempotency check OK: second call reported already_applied"
+else
+  echo "Idempotency check failed: $resp3" && exit 1
+fi
+
+# Verify operation record exists via check_operation
+echo "Verifying stored operation record via check_operation"
+resp4=$(curl -sSfL -b "$COOKIEJAR" -X POST -H "Content-Type: application/json" -d '{"action":"check_operation","client_request_id":"'"$CLIENT_REQ_ID"'"}' "$MOODLE_URL/local/caex_integration/web/test_endpoint.php" || true)
+if echo "$resp4" | grep -q '"status":"ok"'; then
+  echo "Operation record found for client_request_id=$CLIENT_REQ_ID"
+else
+  echo "Operation record not found: $resp4" && exit 1
+fi
+
 echo "Moodle E2E plugin interactions succeeded"
