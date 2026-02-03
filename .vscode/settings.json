@@ -1,0 +1,14 @@
+{
+  // Use the dev container's Python interpreter
+  "python.defaultInterpreterPath": "/usr/local/python/3.12.1/bin/python",
+
+  // Help Pylance find installed packages when analysis struggles
+  "python.analysis.extraPaths": [
+    "/usr/local/python/3.12.1/lib/python3.12/site-packages"
+  ],
+
+  // Reduce false positives by increasing package index depth for Django
+  "python.analysis.packageIndexDepths": {
+    "django": 3
+  }
+}
