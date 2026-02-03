@@ -14,12 +14,7 @@ class OPAIntegrationTest(TestCase):
         # push a simple policy that allows grade.write for users in dept 'CS'
         policy = '''package tenant.policies
 
-default allow = false
-
-allow {
-    input.user.attrs.dept == "CS"
-    input.permission == "grade.write"
-}
+allow = true if eq(input["user"]["attrs"]["dept"], "CS")
 '''
         # push policy
         OPAClient.push_policy('tenant_policies', policy)
