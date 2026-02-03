@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant Student
+    participant Moodle
+    participant CADEX as External Platform
+
+    Student->>Moodle: Click LTI resource (Launch)
+    Moodle->>CADEX: OIDC auth request (login_hint, target_link_uri)
+    CADEX->>Moodle: OIDC auth response (id_token)
+    CADEX->>CADEX: Validate id_token (iss, aud, exp, nonce)
+    CADEX->>CADEX: Create local session; map roles (teacher/student)
+    CADEX->>Moodle: (optional) Call NRPS to fetch roster
+    Moodle-->>CADEX: NRPS roster response (members)
+    CADEX->>Student: Application launch (context + session)
+    CADEX->>Moodle: On grading -> AGS score POST (lineItem + score)
+    CADEX->>Moodle: Fallback: REST webservice grade update (token-based)
+
+    Note over CADEX,Moodle: TLS + JWT signatures + idempotency keys for all calls

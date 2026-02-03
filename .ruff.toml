@@ -1,0 +1,2 @@
+line-length = 88
+exclude = ["backend/*/migrations", "node_modules", ".venv", ".git"]

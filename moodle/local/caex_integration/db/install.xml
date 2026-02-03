@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/caex_integration/db" VERSION="2026020300" COMMENT="Install file for CAEX integration">
+  <TABLES>
+    <TABLE NAME="local_caex_ops" COMMENT="Operation records for idempotency and audit">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="client_request_id" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="payload" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="actor" TYPE="int" LENGTH="10" NOTNULL="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="clientreqid" TYPE="unique" FIELDS="client_request_id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_caex_webhooks" COMMENT="Webhook delivery log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="event" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="payload" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="http_code" TYPE="int" LENGTH="5" NOTNULL="false"/>
+        <FIELD NAME="response" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="attempts" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>
