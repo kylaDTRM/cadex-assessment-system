@@ -38,6 +38,31 @@ if ($action === 'test_update_grade') {
     exit;
 }
 
+if ($action === 'check_operation') {
+    // Check for an operation record by client_request_id or operation_id
+    $client_request_id = $payload['client_request_id'] ?? null;
+    $operation_id = $payload['operation_id'] ?? null;
+    global $DB;
+
+    if ($client_request_id) {
+        $rec = $DB->get_record('local_caex_ops', ['client_request_id' => $client_request_id], '*', IGNORE_MISSING);
+    } elseif ($operation_id) {
+        $rec = $DB->get_record('local_caex_ops', ['id' => (int)$operation_id], '*', IGNORE_MISSING);
+    } else {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'client_request_id or operation_id required']);
+        exit;
+    }
+
+    if ($rec) {
+        echo json_encode(['status' => 'ok', 'record' => $rec]);
+    } else {
+        http_response_code(404);
+        echo json_encode(['status' => 'not_found']);
+    }
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['status' => 'error', 'message' => 'unknown action']);
 exit;

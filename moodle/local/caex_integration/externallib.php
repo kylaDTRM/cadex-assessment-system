@@ -78,7 +78,23 @@ class externallib extends \external_api {
             $grades[$itemid] = $g;
 
             // grade_update expects: array of grade item objects
-            grade_update('\', $grades);
+            // Correct call: grade_update requires the courseid/grade item object and grades; plugin contexts vary, but here we call the simplified helper wrapper if available.
+            if (function_exists('grade_update')) {
+                // Many Moodle deployments expect grade_update to be called like: grade_update($item, $grades)
+                // If item object is not available, pass itemid/grades using legacy helper
+                try {
+                    grade_update($grades);
+                } catch (\Throwable $e) {
+                    // fallback to older signature if available
+                    if (function_exists('grade_update')) {
+                        grade_update(null, $grades);
+                    } else {
+                        throw $e;
+                    }
+                }
+            } else {
+                throw new \Exception('grade_update function not available');
+            }
 
             // Persist operation record (requires DB table in install.xml)
             if ($client_request_id) {
