@@ -21,14 +21,25 @@ else
 fi
 
 # Run Moodle CLI upgrade to install plugins
-MOODLE_CONTAINER=$(docker ps --filter "ancestor=bitnami/moodle:4" --format "{{.ID}}" | head -n1)
+# Prefer getting container via compose, fallback to ancestor filter; detect configured image
+MOODLE_IMAGE=${MOODLE_IMAGE:-bitnami/moodle:4}
+MOODLE_CONTAINER=$(docker compose -f ../docker-compose.e2e.yml ps -q moodle 2>/dev/null || true)
+if [ -z "$MOODLE_CONTAINER" ]; then
+  # fallback: match by ancestor image
+  MOODLE_CONTAINER=$(docker ps --filter "ancestor=$MOODLE_IMAGE" --format "{{.ID}}" | head -n1)
+fi
+
 if [ -n "$MOODLE_CONTAINER" ]; then
   echo "Running Moodle CLI upgrade inside container $MOODLE_CONTAINER"
   docker exec "$MOODLE_CONTAINER" bash -lc "/opt/bitnami/moodle/bin/php /opt/bitnami/moodle/admin/cli/upgrade.php --non-interactive" || true
-  echo "Attempting to create admin token via CLI"
+  echo "Attempting to purge caches via CLI"
   docker exec "$MOODLE_CONTAINER" bash -lc "/opt/bitnami/moodle/bin/php /opt/bitnami/moodle/admin/cli/purge_caches.php" || true
 else
   echo "Moodle container not found; cannot run CLI upgrades"
+  echo "-- Docker service list --"
+  docker compose -f ../docker-compose.e2e.yml ps || true
+  echo "-- Docker ps (recent) --"
+  docker ps --format "{{.ID}} {{.Image}} {{.Names}}" --no-trunc | sed -n '1,200p' || true
 fi
 
 # Basic smoke test: check home page contains 'Moodle'

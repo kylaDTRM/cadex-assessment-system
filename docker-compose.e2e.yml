@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: moodle
+      POSTGRES_USER: moodle
+      POSTGRES_PASSWORD: moodle
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moodle -d moodle"]
+      interval: 5s
+      retries: 20
+
+  moodle:
+    image: ${MOODLE_IMAGE:-bitnami/moodle:4}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MOODLE_DATABASE_TYPE: pgsql
+      MOODLE_DATABASE_HOST: postgres
+      MOODLE_DATABASE_PORT: 5432
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: moodle
+      MOODLE_USERNAME: admin
+      MOODLE_PASSWORD: admin
+      MOODLE_EMAIL: admin@example.com
+      ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./moodle/local/caex_integration:/bitnami/moodle/local/caex_integration:rw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fS http://localhost:8080 || exit 1"]
+      interval: 10s
+      retries: 30
+
+networks:
+  default:
+    name: cadex_e2e_net
