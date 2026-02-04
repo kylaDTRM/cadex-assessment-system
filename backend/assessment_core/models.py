@@ -101,6 +101,15 @@ class Attempt(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attempts')
     attempt_number = models.IntegerField(default=1)
 
+    # Offline sync fields (local-first sync support)
+    client_id = models.UUIDField(null=True, blank=True, help_text="Client-generated UUID for idempotency")
+    client_version = models.IntegerField(default=0)
+    server_version = models.IntegerField(default=0)
+    status = models.CharField(max_length=20, default='IN_PROGRESS')
+    last_client_ts = models.DateTimeField(null=True, blank=True)
+    conflict_reason = models.TextField(null=True, blank=True)
+    origin = models.CharField(max_length=20, null=True, blank=True)
+
     started_at = models.DateTimeField(auto_now_add=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
 
@@ -120,10 +129,23 @@ class Attempt(models.Model):
         null=True,
         blank=True)
 
-    status = models.CharField(max_length=20, default='IN_PROGRESS')
-
     class Meta:
         unique_together = ['assessment', 'student', 'attempt_number']
+
+
+class SyncLog(models.Model):
+    """Append-only log of client sync events for auditing and reconciliation."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resource_type = models.CharField(max_length=50)
+    resource_client_id = models.UUIDField(null=True, blank=True)
+    operation = models.CharField(max_length=20)
+    payload = models.JSONField(default=dict)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    client_ts = models.DateTimeField(null=True, blank=True)
+    client_id = models.CharField(max_length=200, null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['resource_type', 'resource_client_id'])]
 
 
 class Response(models.Model):
@@ -134,9 +156,12 @@ class Response(models.Model):
         related_name='responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     response_data = models.JSONField(default=dict)
+
+    # Client-side metadata for sync and conflict resolution
+    client_id = models.UUIDField(null=True, blank=True)
+    client_ts = models.DateTimeField(null=True, blank=True, help_text="Client timestamp for the answer")
+    response_hash = models.CharField(max_length=128, null=True, blank=True)
+
     points_awarded = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True)
     answered_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ['attempt', 'question']
